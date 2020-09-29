@@ -17,20 +17,67 @@ Let's continue working with enrollment data. I have downloaded 5 years of fall e
 
 **Prompt:** Write a pipe which creates an object named `d_2019` by reading in and cleaning up the data from Fall 2019. (You will need to examine the file names to determine which file this is.) You may consult and re-use the code from last week. The variable names in the tibble should be `id`,  `title`, `name`, `department` and `u_grad`. Keep only classes with more than 10 undergrads enrolled.
 
+```{r s1}
 
+library(readxl)
+d_2019 <- read_excel("raw_data/class_enrollment_summary_by_term_12.20.19.xlsx", skip = 3) %>%
+  clean_names() %>%
+  rename_with(~ str_replace(.x, "course_", "")) %>%
+  select(id, title, name, department, u_grad) %>%
+  drop_na() %>%
+  filter(u_grad > 10)
 
+View(d_2019)
+
+```
 
 ### Scene 2
 
 **Prompt:** We could copy/paste this code 5 times, adjust the files names, and then read in each file. But, as you know from Chapter 4, that is a bad idea. It also scales very poorly. Create a function called `read_enrollent` which takes one argument, `file`. Use that function to read in the data from fall 2019 and assign it to an object called `d_2019_take_2`. Do you get the same answer as you did in Scene 1?
 
+```{r s2}
+
+read_enrollment <- function(file) {
+  read_excel(file, skip = 3) %>%
+  clean_names() %>%
+  rename_with(~ str_replace(.x, "course_", "")) %>%
+  select(id, title, name, department, u_grad) %>%
+  drop_na() %>%
+  filter(u_grad > 10)
+}
+
+d_2019_take2 <-  read_enrollment(file = "raw_data/class_enrollment_summary_by_term_12.20.19.xlsx")
+d_2019_take2
+
+#Yes!
+
+```
 
 
 ### Scene 3
 
-**Prompt:** Call `read_enrollent()` five times, once for each of our data sets. Note how different the file names are. Real data is messy! Assign the result of each call to an object, `d_2019`, `d_2018` and so on. Should be easy . . .
+**Prompt:** Call `read_enrollment()` five times, once for each of our data sets. Note how different the file names are. Real data is messy! Assign the result of each call to an object, `d_2019`, `d_2018` and so on. Should be easy . . .
 
 Arrg! Depending in how you wrote `read_enrollment()`, you will probably be getting an error, for at least some of the years.  How annoying that Harvard changes the format! Make your function flexible enough to deal with all these files. Hint: You need to add at least one argument in addition to `file` so that you can change the behavior of the function when you call it. Give that new argument a sensible default.
+
+```{r s3}
+
+read_enrollment <- function(file, skip = 3) {
+  read_excel(file, skip = skip) %>%
+  clean_names() %>%
+  rename_with(~ str_replace(.x, "course_", "")) %>%
+  select(id, title, name, department, u_grad) %>%
+  drop_na() %>%
+  filter(u_grad > 10)
+}
+
+d_2019 <- read_enrollment(file = "raw_data/class_enrollment_summary_by_term_12.20.19.xlsx")
+d_2018 <- read_enrollment(file = "raw_data/class_enrollment_summary_by_term_10.24.18.xlsx", skip = 2)
+d_2017 <- read_enrollment(file = "raw_data/class_enrollment_summary_by_term_10.20.17.xlsx")
+d_2016 <- read_enrollment(file = "raw_data/class_enrollment_summary_by_term_fall_2016.xlsx", skip = 0)
+d_2015 <- read_enrollment(file = "raw_data/class_enrollment_summary_by_term_fall_2015.xlsx")
+
+```
 
 
 ### Scene 4
